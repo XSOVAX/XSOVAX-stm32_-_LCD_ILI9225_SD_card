@@ -11,8 +11,10 @@
  */
 
 #include "stm32f1xx.h"
-#include "USART.h"
 #include <stdio.h>
+#include "USART.h"
+#include "TIMER.h"
+
 
 
 /**
@@ -61,5 +63,9 @@ int main(void) {
     // Инициализурем USART1 для логов
     uart_init();
     uart_puts("Проект инициализирован!\r\n");
+    Delay_ms(500);
+    uart_puts("Прождали 500 мсек!\r\n");
+    Delay_us(500);
+    uart_puts("Прождали 500 нсек!\r\n");
     while(1){}
 }
