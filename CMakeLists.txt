@@ -15,11 +15,15 @@ file(GLOB_RECURSE SOURCES
     "cmsis/*.c"
     "cmsis/startup_stm32f103xb.s"
     "cmsis/system_stm32f1xx.c"
+    "FatFS/*.c"
+    "FatFS/SD/*.c"
 )
 
 include_directories(
     cmsis
     inc
+    FatFS
+    FatFS/SD
 )
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES})

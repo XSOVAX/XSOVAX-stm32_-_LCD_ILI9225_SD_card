@@ -15,6 +15,8 @@
 #include "USART.h"
 #include "TIMER.h"
 #include "SPI.h"
+#include "file_work.h"
+#include "SD_card.h"
 
 
 
@@ -72,5 +74,28 @@ int main(void) {
     uart_puts("Теперь есть SPI1!\r\n");
     uart_puts("Он нужен для общения с SD картой и LCD дисплеем\r\n");
     uart_puts("Пока у нас мульти слейв режим потом разнесем для использования DMA \r\n");
+
+    sd_init();
+
+    uart_puts("\r\n=== FatFS Test ===\r\n");
+    SPI_SetSpeed(SPI_BaudRatePrescaler_256);
+    // Инициализация файловой системы
+    FRESULT res = filesystem_init();
+    while (res != FR_OK) {
+        uart_puts("Filesystem init failed: ");
+        print_hex(res);
+        uart_puts("\r\n");
+        SPI_devices[0].deactivate();
+        Delay_ms(1000);
+        res = filesystem_init();
+    }
+    
+
+    uart_puts("Filesystem mounted!\r\n");
+
+    // Вывод всех файлов 
+    list_files(".*");
+
+
     while(1){}
 }

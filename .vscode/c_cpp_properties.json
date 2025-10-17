@@ -5,7 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/cmsis",
-                "${workspaceFolder}/inc"
+                "${workspaceFolder}/inc",
+                "${workspaceFolder}/FatFS",
+                "${workspaceFolder}/FatFS/SD"
             ],
             "defines": [
                 "STM32F103xB"
