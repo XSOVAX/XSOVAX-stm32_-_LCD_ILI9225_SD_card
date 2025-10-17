@@ -6,6 +6,7 @@
 #include "diskio.h"
 #include "SD_card.h"
 #include "SPI.h"
+#include "ILI9225.h"
 
 
 // -----------------------------------------------------------------------------
@@ -61,5 +62,13 @@ void scan_files(const char *suffix);
  * @brief Выводит список найденных файлов с индексами
  */
 void print_file_list(void);
+
+/**
+ * @brief Чтение из файла картинки и вывод ее на экран LCD
+ * @param suffix название файла для открытия
+ * @param buffer буфер для хранения части открытого файла 
+ * для последующей передаче его на экран
+ */
+void file_read(const char *suffix, uint8_t *buffer, uint16_t len_b);
 
 #endif

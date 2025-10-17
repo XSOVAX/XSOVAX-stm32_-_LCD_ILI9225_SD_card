@@ -17,8 +17,10 @@
 #include "SPI.h"
 #include "file_work.h"
 #include "SD_card.h"
+#include "ILI9225.h"
 
-
+#define BUF_READ_PICTURE (5 /* строчек */ * LCD_HEIGHT * 3 /* байта на цвет */)
+static uint8_t picture[BUF_READ_PICTURE];
 
 /**
  * @brief Инициализация тактирования системы
@@ -96,6 +98,14 @@ int main(void) {
     // Вывод всех файлов 
     list_files(".*");
 
+    // Инициализация дисплея
+    ILI9225_init();
+	// Очистка дисплея (заливка черным цветом)
+    ILI9225_clear();
+    // Установка ориентации (011)
+    ILI9225_write(ENTRY_MODE, (0x1000) | (0b011 << 3));
+
+    file_read("xp.bmp", picture, BUF_READ_PICTURE);
 
     while(1){}
 }

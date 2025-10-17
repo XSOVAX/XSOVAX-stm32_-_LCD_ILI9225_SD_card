@@ -24,7 +24,8 @@
         "typeinfo": "c",
         "ili9225.h": "c",
         "timer.h": "c",
-        "spi.h": "c"
+        "spi.h": "c",
+        "ili9225_colours.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false,
     "C_Cpp.errorSquiggles": "enabled"

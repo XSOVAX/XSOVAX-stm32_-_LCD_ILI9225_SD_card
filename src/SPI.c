@@ -231,12 +231,12 @@ uint8_t SPI_transfer(uint8_t data) {
  */
 void SPI_send(char data) {
 	while(!(SPI1->SR & SPI_SR_TXE)) {};
-	SPI_devices[0].activate();
+	SD_cart_CS.activate();
     Delay_us(2);
     SPI1->DR = data;
 	while(!(SPI1->SR & SPI_SR_TXE)) {};
 	while((SPI1->SR & SPI_SR_BSY)) {};
-	SPI_devices[0].deactivate();
+	SD_cart_CS.deactivate();
 }
 
 
