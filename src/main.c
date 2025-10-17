@@ -107,5 +107,15 @@ int main(void) {
 
     file_read("xp.bmp", picture, BUF_READ_PICTURE);
 
+    drawString8x8(10, 10, "HELLO WORLD", COLOR_TOMATO, 0);
+    drawString8x8(10, 10 + 9, "HELLO WORLD", COLOR_TOMATO, 0);
+    drawString8x8(10, 10 + 9 * 2, "HELLO WORLD", COLOR_TOMATO, 0);
+    drawString8x8(10, 40, "HELLO WORLD", COLOR_TOMATO, 1);
+    drawString8x8(10, 40 + 9, "HELLO WORLD", COLOR_TOMATO, 1);
+    drawString8x8(10, 40 + 9 * 2, "HELLO WORLD", COLOR_TOMATO, 1);
+    drawString8x8(10, 150, "HELLO WORLD", COLOR_TOMATO, 0);
+    drawString8x8(10, 150 + 9, "HELLO WORLD", COLOR_TOMATO, 0);
+    drawString8x8(10, 150 + 9 * 2, "HELLO WORLD", COLOR_TOMATO, 1);
+    drawString8x8(10, 150 + 9 * 3, "HELLO WORLD", COLOR_TOMATO, 0);
     while(1){}
 }

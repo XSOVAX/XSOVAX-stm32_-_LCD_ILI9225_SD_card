@@ -8,6 +8,7 @@
 	#include "ILI9225_colours.h"
 	#include <limits.h>
 	#include "TIMER.h"
+	#include "fonts.h"
 
 
 	// ILI9225 screen size
