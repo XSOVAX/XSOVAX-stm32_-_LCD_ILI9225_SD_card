@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "USART.h"
 #include "TIMER.h"
+#include "SPI.h"
 
 
 
@@ -67,5 +68,9 @@ int main(void) {
     uart_puts("Прождали 500 мсек!\r\n");
     Delay_us(500);
     uart_puts("Прождали 500 нсек!\r\n");
+    spi_init();
+    uart_puts("Теперь есть SPI1!\r\n");
+    uart_puts("Он нужен для общения с SD картой и LCD дисплеем\r\n");
+    uart_puts("Пока у нас мульти слейв режим потом разнесем для использования DMA \r\n");
     while(1){}
 }
