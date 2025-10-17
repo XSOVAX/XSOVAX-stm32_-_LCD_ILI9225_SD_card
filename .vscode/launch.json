@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [      
+        {
+            "name": "LCD menu",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/LCD_menu.elf",
+            "device": "STM32F103RB",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f1x.cfg"
+            ],
+            "svdFile": "${workspaceFolder}/cmsis/STM32F103xx.svd",
+            "runToEntryPoint": "main",
+            "preLaunchTask": "CMake Build"
+        }
+    ]
+}

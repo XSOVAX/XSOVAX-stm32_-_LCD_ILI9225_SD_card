@@ -1,0 +1,32 @@
+{
+    "files.associations": {
+        "*.cpp": "cpp",
+        "*.c": "c",
+        "freertosconfig.h": "c",
+        "freertos.h": "c",
+        "portable.h": "c",
+        "task.h": "c",
+        "string.h": "c",
+        "cortex-debug.armToolchainPath": "/usr/bin",
+        "cortex-debug.openocdPath": "/usr/bin/openocd",
+        "cortex-debug.stlinkPath": "/usr/bin",
+        "stm32f1xx.h": "c",
+        "config.h": "c",
+        "flash.h": "c",
+        "stdint.h": "c",
+        "stm32f10x_flash.h": "c",
+        "usart.h": "c",
+        "bit": "c",
+        "concepts": "c",
+        "cstdio": "c",
+        "type_traits": "c",
+        "new": "c",
+        "typeinfo": "c",
+        "ili9225.h": "c",
+        "timer.h": "c",
+        "spi.h": "c"
+    },
+    "cortex-debug.variableUseNaturalFormat": false,
+    "C_Cpp.errorSquiggles": "enabled"
+    
+}
