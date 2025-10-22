@@ -31,7 +31,7 @@ uint8_t sd_wait_for_r1(uint32_t timeout_ms) {
     uint8_t response;
     SPI_devices[0].activate();
     do {
-        response = SPI_transfer(0xFF);
+        response = SPI_transfer(SPI1, 0xFF);
         if (response != 0xFF) return response;
     } while (timeout--);
     SPI_devices[0].deactivate();
@@ -43,16 +43,16 @@ uint8_t sd_wait_for_r1(uint32_t timeout_ms) {
  */
 static uint8_t sd_send_command(uint8_t cmd, uint32_t arg, uint8_t crc) {
     SPI_devices[0].deactivate();
-    SPI_transfer(0xFF); // Пауза
+    SPI_transfer(SPI1, 0xFF); // Пауза
     Delay_us(5);
     SPI_devices[0].activate();
 
-    SPI_transfer(0x40 | cmd);
-    SPI_transfer((uint8_t)(arg >> 24));
-    SPI_transfer((uint8_t)(arg >> 16));
-    SPI_transfer((uint8_t)(arg >> 8));
-    SPI_transfer((uint8_t)arg);
-    SPI_transfer(crc);
+    SPI_transfer(SPI1, 0x40 | cmd);
+    SPI_transfer(SPI1, (uint8_t)(arg >> 24));
+    SPI_transfer(SPI1, (uint8_t)(arg >> 16));
+    SPI_transfer(SPI1, (uint8_t)(arg >> 8));
+    SPI_transfer(SPI1, (uint8_t)arg);
+    SPI_transfer(SPI1, crc);
 
     return sd_wait_for_r1(100); // 100 мс таймаут
 }
@@ -62,7 +62,7 @@ static uint8_t sd_send_command(uint8_t cmd, uint32_t arg, uint8_t crc) {
  */
 static void sd_read_data(uint8_t *buf, uint8_t len) {
     for (uint8_t i = 0; i < len; i++) {
-        buf[i] = SPI_transfer(0xFF);
+        buf[i] = SPI_transfer(SPI1, 0xFF);
     }
 }
 
@@ -80,7 +80,7 @@ static SD_Status sd_read_sector(uint32_t sector, uint8_t *buffer) {
     uint32_t timeout = 0xFFFF;
     uint8_t token;
     do {
-        token = SPI_transfer(0xFF);
+        token = SPI_transfer(SPI1, 0xFF);
         if (token != 0xFF) break;
     } while (timeout--);
 
@@ -91,12 +91,12 @@ static SD_Status sd_read_sector(uint32_t sector, uint8_t *buffer) {
 
     // Читаем 512 байт
     for (int i = 0; i < 512; i++) {
-        buffer[i] = SPI_transfer(0xFF);
+        buffer[i] = SPI_transfer(SPI1, 0xFF);
     }
 
     // Пропускаем CRC (2 байта)
-    SPI_transfer(0xFF);
-    SPI_transfer(0xFF);
+    SPI_transfer(SPI1, 0xFF);
+    SPI_transfer(SPI1, 0xFF);
 
     SPI_devices[0].deactivate();
     return SD_OK;
@@ -113,19 +113,19 @@ static SD_Status sd_write_sector(uint32_t sector, const uint8_t *buffer) {
     }
 
     // Токен записи
-    SPI_transfer(SD_TOKEN_SINGLE_WRITE);
+    SPI_transfer(SPI1, SD_TOKEN_SINGLE_WRITE);
 
     // Данные
     for (int i = 0; i < 512; i++) {
-        SPI_transfer(buffer[i]);
+        SPI_transfer(SPI1, buffer[i]);
     }
 
     // Фиктивный CRC
-    SPI_transfer(0xFF);
-    SPI_transfer(0xFF);
+    SPI_transfer(SPI1, 0xFF);
+    SPI_transfer(SPI1, 0xFF);
 
     // Проверка ответа
-    uint8_t response = SPI_transfer(0xFF);
+    uint8_t response = SPI_transfer(SPI1, 0xFF);
     if ((response & 0x1F) != SD_TOKEN_DATA_ACCEPTED) {
         SPI_devices[0].deactivate();
         return SD_ERROR;
@@ -133,7 +133,7 @@ static SD_Status sd_write_sector(uint32_t sector, const uint8_t *buffer) {
 
     // Ждём завершения записи
     volatile uint32_t timeout = 0xFFFF;
-    while (SPI_transfer(0xFF) == 0x00) {
+    while (SPI_transfer(SPI1, 0xFF) == 0x00) {
         if (timeout-- == 0) {
             SPI_devices[0].deactivate();
             return SD_TIMEOUT_ERROR;
@@ -156,7 +156,7 @@ SD_Status sd_init(void) {
     // Задержка после подачи питания
     for (volatile int i = 0; i < 100000; i++);
     // ≥80 тактов при CS=HIGH
-    for (int i = 0; i < 10; i++) SPI_transfer(0xFF);
+    for (int i = 0; i < 10; i++) SPI_transfer(SPI1, 0xFF);
     Delay_ms(50);
     // CMD0
     uint8_t r1 = sd_send_command(SD_CMD0_GO_IDLE_STATE, 0, 0x95);
@@ -202,12 +202,7 @@ SD_Status SD_WriteBlock(uint32_t sector, const uint8_t *buffer) {
     return sd_write_sector(sector, buffer);
 }
 
-/**
- * @brief Ускорение SPI после инициализации
- */
-void sd_spi_set_high_speed(void) {
-    SPI_SetSpeed(SPI_BaudRatePrescaler_64); 
-}
+
 
 void log_message(const char* msg) {
     FIL file;

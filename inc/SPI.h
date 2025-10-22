@@ -47,12 +47,6 @@
 	void spi_init(void);
 
 	/**
-	 * @brief Изменение скорости SPI
-	 * @param prescaler Делитель частоты (например, SPI_BaudRatePrescaler_4)
-	 */
-	void SPI_SetSpeed(uint16_t prescaler);
-
-	/**
 	 * @brief Активация CS (PA4 = 0)
 	 */
 	void CS_Activate_0(void);
@@ -112,28 +106,27 @@
 	 * @param data Байт для передачи
 	 * @return Принятый байт
 	 */
-	uint8_t SPI1_write(uint8_t data);
+	uint8_t SPI1_write(SPI_TypeDef *SPI, uint8_t data);
 
 	/**
 	 * @brief Обмен байтами по SPI
 	 * @param data Байт для отправки
 	 * @return Принятый байт
 	 */
-	uint8_t SPI_transfer(uint8_t data);
+	uint8_t SPI_transfer(SPI_TypeDef *SPI, uint8_t data);
 
 
 	/**
 	 * @brief Обмен байтами по SPI для SD карты с управляемым CS
 	 * @param data Байт для отправки
 	*/
-	void SPI_send(char data);
+	void SPI_send(SPI_TypeDef *SPI, char data);
 
 	/**
 	 * @brief Обмен байтами по SPI для LCD по 16 бит с управляемым CS
 	 * @param data Байт для отправки
 	 */
-	void SPI_send_16bit(uint16_t data);
-
+	void SPI_send_16bit(SPI_TypeDef *SPI, uint16_t data);
 
 #endif /* SPI_H */
 

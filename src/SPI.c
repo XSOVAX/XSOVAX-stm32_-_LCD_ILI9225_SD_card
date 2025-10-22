@@ -45,7 +45,33 @@ static void spi1_init_master(void) {
     SPI1->CR1 = SPI_CR1_MSTR |
                 SPI_CR1_SSM  |
                 SPI_CR1_SSI  |
-                SPI_BaudRatePrescaler_256 | 
+                SPI_BaudRatePrescaler_64 | 
+                SPI_CR1_SPE;	
+}
+
+
+/**
+ * @brief Инициализация SPI2 в режиме мастера
+ */
+static void spi2_init_master(void) {
+    // Включаем тактирование
+    RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
+
+    // Сбрасываем конфигурацию
+    SPI2->CR1 = 0;
+
+    // Настройка SPI:
+    // - Master mode
+    // - Software slave management (SSI = 1)
+    // - CPOL = 0, CPHA = 0 (Mode 0)
+    // - Baud rate: PCLK2/256 (на старте)
+    // - SPI Enable
+    // - SPI TX DMA
+
+    SPI2->CR1 = SPI_CR1_MSTR |
+                SPI_CR1_SSM  |
+                SPI_CR1_SSI  |
+                SPI_BaudRatePrescaler_64 | 
                 SPI_CR1_SPE;	
 }
 
@@ -68,13 +94,16 @@ static void spi1_init_master(void) {
 void spi_init(void) {
     // Тактирование порта A и альтернативных функций
     RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
-    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPCEN;
+    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN;
 
     // Сбрасываем настройки пинов
     GPIOA->CRL &= ~(GPIO_CRL_CNF4  | GPIO_CRL_MODE4);
     GPIOA->CRL &= ~(GPIO_CRL_CNF5  | GPIO_CRL_MODE5);
     GPIOA->CRL &= ~(GPIO_CRL_CNF6  | GPIO_CRL_MODE6);
     GPIOA->CRL &= ~(GPIO_CRL_CNF7  | GPIO_CRL_MODE7);
+
+    GPIOB->CRH &= ~(GPIO_CRH_CNF13  | GPIO_CRH_MODE13);
+    GPIOB->CRH &= ~(GPIO_CRH_CNF15  | GPIO_CRH_MODE15);
 
     GPIOC->CRL &= ~(GPIO_CRL_CNF0  | GPIO_CRL_MODE0);
     GPIOC->CRL &= ~(GPIO_CRL_CNF1  | GPIO_CRL_MODE1);
@@ -88,6 +117,7 @@ void spi_init(void) {
 
     // PA5 - SCK (Alternate Function Push-Pull, 50MHz)
     GPIOA->CRL |= GPIO_CRL_MODE5 | GPIO_CRL_CNF5_1;
+    GPIOB->CRH |= GPIO_CRH_MODE13 | GPIO_CRH_CNF13_1;
 
     // PA6 - MISO (Input Floating)
     GPIOA->CRL |= GPIO_CRL_CNF6_0;
@@ -95,6 +125,7 @@ void spi_init(void) {
 
     // PA7 - MOSI (Alternate Function Push-Pull, 50MHz)
     GPIOA->CRL |= GPIO_CRL_MODE7 | GPIO_CRL_CNF7_1;
+    GPIOB->CRH |= GPIO_CRH_MODE15 | GPIO_CRH_CNF15_1;
 
     // CS высокий (неактивен)
     GPIOA->BSRR = GPIO_BSRR_BS4;
@@ -104,22 +135,8 @@ void spi_init(void) {
 
     // Инициализация SPI
     spi1_init_master();
+    spi2_init_master();
     Create_SPI_devices(SPI_devices);
-}
-
-/**
- * @brief Изменение скорости SPI
- * @param prescaler Делитель частоты (например, SPI_BaudRatePrescaler_4)
- */
-void SPI_SetSpeed(uint16_t prescaler) {
-    // Отключаем SPI
-    SPI1->CR1 &= ~SPI_CR1_SPE;
-    // Сбрасываем старый делитель
-    SPI1->CR1 &= ~SPI_CR1_BR;
-    // Устанавливаем новый
-    SPI1->CR1 |= prescaler;
-    // Включаем SPI
-    SPI1->CR1 |= SPI_CR1_SPE;
 }
 
 /**
@@ -217,11 +234,11 @@ void SPI1_TransmitReceive(uint16_t *tx_data, uint16_t *rx_data, uint8_t key_numb
  * @param data Байт для отправки
  * @return Принятый байт
  */
-uint8_t SPI_transfer(uint8_t data) {
-    while (!(SPI1->SR & SPI_SR_TXE));
-    SPI1->DR = data;
-    while (!(SPI1->SR & SPI_SR_RXNE));
-    return (uint8_t)SPI1->DR;
+uint8_t SPI_transfer(SPI_TypeDef *SPI, uint8_t data) {
+    while (!(SPI->SR & SPI_SR_TXE));
+    SPI->DR = data;
+    while (!(SPI->SR & SPI_SR_RXNE));
+    return (uint8_t)SPI->DR;
 }
 
 
@@ -229,13 +246,13 @@ uint8_t SPI_transfer(uint8_t data) {
  * @brief Обмен байтами по SPI для SD карты с управляемым CS
  * @param data Байт для отправки
  */
-void SPI_send(char data) {
-	while(!(SPI1->SR & SPI_SR_TXE)) {};
+void SPI_send(SPI_TypeDef *SPI, char data) {
+	while(!(SPI->SR & SPI_SR_TXE)) {};
 	SD_cart_CS.activate();
     Delay_us(2);
-    SPI1->DR = data;
-	while(!(SPI1->SR & SPI_SR_TXE)) {};
-	while((SPI1->SR & SPI_SR_BSY)) {};
+    SPI->DR = data;
+	while(!(SPI->SR & SPI_SR_TXE)) {};
+	while((SPI->SR & SPI_SR_BSY)) {};
 	SD_cart_CS.deactivate();
 }
 
@@ -244,23 +261,20 @@ void SPI_send(char data) {
  * @brief Обмен байтами по SPI для LCD по 16 бит с управляемым CS
  * @param data Байт для отправки
  */
-void SPI_send_16bit(uint16_t data) {
+void SPI_send_16bit(SPI_TypeDef *SPI, uint16_t data) {
 	uint8_t buff = 0;
-	while(!(SPI1->SR & SPI_SR_TXE)) {};
+	while(!(SPI->SR & SPI_SR_TXE)) {};
 	LCD_CS.activate();
     
 	buff = data >> 8;
-	SPI1->DR = buff;
-	while(!(SPI1->SR & SPI_SR_TXE)) {};
+	SPI->DR = buff;
+	while(!(SPI->SR & SPI_SR_TXE)) {};
 		
 
 	buff = (uint8_t) (0x00FF & data);
-	SPI1->DR = buff;
-	while(!(SPI1->SR & SPI_SR_TXE)) {};
+	SPI->DR = buff;
+	while(!(SPI->SR & SPI_SR_TXE)) {};
 		
-	while((SPI1->SR & SPI_SR_BSY)) {};
+	while((SPI->SR & SPI_SR_BSY)) {};
 	LCD_CS.deactivate();
 }
-
-
-

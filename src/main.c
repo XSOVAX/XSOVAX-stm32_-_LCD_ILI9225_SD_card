@@ -19,7 +19,7 @@
 #include "SD_card.h"
 #include "ILI9225.h"
 
-#define BUF_READ_PICTURE (5 /* строчек */ * LCD_HEIGHT * 3 /* байта на цвет */)
+#define BUF_READ_PICTURE (15 /* строчек */ * LCD_HEIGHT * 3 /* байта на цвет */)
 static uint8_t picture[BUF_READ_PICTURE];
 
 /**
@@ -80,7 +80,6 @@ int main(void) {
     sd_init();
 
     uart_puts("\r\n=== FatFS Test ===\r\n");
-    SPI_SetSpeed(SPI_BaudRatePrescaler_256);
     // Инициализация файловой системы
     FRESULT res = filesystem_init();
     while (res != FR_OK) {
@@ -105,7 +104,7 @@ int main(void) {
     // Установка ориентации (011)
     ILI9225_write(ENTRY_MODE, (0x1000) | (0b011 << 3));
 
-    file_read("xp.bmp", picture, BUF_READ_PICTURE);
+    file_read("xp_.bmp", picture, BUF_READ_PICTURE);
 
     drawString8x8(10, 10, "HELLO WORLD", COLOR_TOMATO, 0);
     drawString8x8(10, 10 + 9, "HELLO WORLD", COLOR_TOMATO, 0);

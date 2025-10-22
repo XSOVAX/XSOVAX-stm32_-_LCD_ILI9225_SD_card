@@ -87,6 +87,6 @@
 	 * @param data данные которые нужно отправить
 	 * @param len_b длинна массива
 	 */
-	void ILI9225_Draw_File(uint8_t const *data, uint16_t *len_b);
+	void ILI9225_Draw_File(uint8_t const *data, uint16_t len_b);
 	
 #endif /* SRC_ILI9225_H_ */

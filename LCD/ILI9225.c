@@ -24,7 +24,7 @@ void ILI9225_reset(void) {
 void ILI9225_writeIndex(uint16_t address) {
 	LCD_CS.activate();
 	LCD_RS.activate();
-	SPI_send_16bit(address);
+	SPI_send_16bit(SPI2, address);
 	LCD_RS.deactivate();
 }
 
@@ -35,7 +35,7 @@ void ILI9225_writeIndex(uint16_t address) {
  */
 void ILI9225_write(uint16_t address, uint16_t data) {
 	ILI9225_writeIndex(address);
-	SPI_send_16bit(data);
+	SPI_send_16bit(SPI2, data);
 	LCD_CS.deactivate();
 }
 
@@ -240,10 +240,10 @@ void ILI9225_clear(void) {
     ILI9225_setWindow(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1);
 
     ILI9225_writeIndex(GRAM_DATA_REG);
-
+	LCD_CS.activate();
     for(i = 0; i< size; i++)
     {
-    	SPI_send_16bit(COLOR_BLACK);
+    	SPI_send_16bit(SPI2, COLOR_BLACK);
     }
 }
 
@@ -252,8 +252,8 @@ void ILI9225_clear(void) {
  * @param data данные которые нужно отправить
  * @param len_b длинна массива
  */
-void ILI9225_Draw_File(uint8_t const *data, uint16_t *len_b) {
-    for(int i = 0; i < *len_b; i+=3) {
-		SPI_send_16bit(RGB888_RGB565(data[i+2]<<16 | data[i + 1] << 8 | data[i]));
+void ILI9225_Draw_File(uint8_t const *data, uint16_t len_b) {
+	for(int i = 0; i < len_b; i+=3) {
+		SPI_send_16bit(SPI2, RGB888_RGB565(data[i+2]<<16 | data[i + 1] << 8 | data[i]));
     }
 }	

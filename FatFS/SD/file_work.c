@@ -249,8 +249,7 @@ void file_read(const char *suffix, uint8_t *buffer, uint16_t len_b) {
     }
     UINT bytes_read;
 
-    SPI_SetSpeed(SPI_BaudRatePrescaler_64);
-    
+  
     //uart_puts("Читаем заголовок файла длиною 54 байта\r\n");
     uint8_t header[54];
     res = f_read(&file, header, 54, &bytes_read);
@@ -262,20 +261,16 @@ void file_read(const char *suffix, uint8_t *buffer, uint16_t len_b) {
     uart_puts("\r\nВысота = ");
     print_hex(height);
     uart_puts("\r\n");
-    ILI9225_setWindow(0,0, height - 1, width - 1);
-    ILI9225_write(ENTRY_MODE, (0x1000) | (0b011 << 3));
+    ILI9225_setWindow(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1);
     ILI9225_writeIndex(GRAM_DATA_REG);
+	LCD_CS.activate();
+    
     //uart_puts("Читаем файл кусками по 3300 байтов\r\n");
     //uart_puts("3300 байтов это 5 строчек по 220 пикселей (3 байта на пиксель)\r\n");
     while (1) {
-    
-        // меняем скорость для чтения с SD карты моя не поддерживает большую скорость
-        SPI_SetSpeed(SPI_BaudRatePrescaler_64);
         res = f_read(&file, buffer, len_b, &bytes_read);
         if (res != FR_OK || bytes_read == 0) break;
-        // меняем скорость для отправки данных на экран,  который поддерживает скорость по больше
-        SPI_SetSpeed(SPI_BaudRatePrescaler_4);
-        ILI9225_Draw_File(buffer, &len_b);
+        ILI9225_Draw_File(buffer, len_b);
     }
 
     f_close(&file);
