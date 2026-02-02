@@ -12,7 +12,7 @@ void ILI9225_reset(void) {
 	LCD_RST.deactivate();
 	Delay_ms(10);
 	LCD_RST.activate();
-	Delay_ms(50);
+	Delay_ms(150);
 	LCD_RST.deactivate();
 	Delay_ms(50);
 }

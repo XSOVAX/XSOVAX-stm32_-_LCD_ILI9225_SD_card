@@ -11,11 +11,13 @@
 	// -----------------------------------------------------------------------------
 	
 	#define SPI_BaudRatePrescaler_256 	( SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0 )
-	#define SPI_BaudRatePrescaler_128 	( SPI_CR1_BR_2 )
-	#define SPI_BaudRatePrescaler_64 	( SPI_CR1_BR_2 | SPI_CR1_BR_1 )
+	#define SPI_BaudRatePrescaler_128 	( SPI_CR1_BR_2 | SPI_CR1_BR_1 )
+	#define SPI_BaudRatePrescaler_64 	( SPI_CR1_BR_2 | SPI_CR1_BR_0 )
+	#define SPI_BaudRatePrescaler_32 	( SPI_CR1_BR_2 )
 	#define SPI_BaudRatePrescaler_16 	( SPI_CR1_BR_1 | SPI_CR1_BR_0 )
+	#define SPI_BaudRatePrescaler_8 	( SPI_CR1_BR_1 )
 	#define SPI_BaudRatePrescaler_4 	( SPI_CR1_BR_0 )
-	#define SPI_BaudRatePrescaler_0 	( ~SPI_BaudRatePrescaler_256 )
+	#define SPI_BaudRatePrescaler_2 	( ~SPI_BaudRatePrescaler_256 )
 
 	#define SD_cart_CS		SPI_devices[0]
 	#define LCD_RST			SPI_devices[1]
@@ -57,32 +59,44 @@
 	void CS_Deactivate_0(void);
 	
 	/**
-	 * @brief Активация RST (PC0 = 0)
+	 * @brief Активация RST
+	 * (PB6 = 0) 
+	 * (PC0 = 0)
 	 */
 	void CS_Activate_1(void);
 
 	/**
-	 * @brief Деактивация RST (PC0 = 1)
+	 * @brief Деактивация RST 
+	 * (PB6 = 1)
+	 * (PC0 = 1)
 	 */
 	void CS_Deactivate_1(void);
 
 	/**
-	 * @brief Активация CS (PC1 = 0)
+	 * @brief Активация CS 
+	 * (PB7 = 0)
+	 * (PC1 = 0)
 	 */
 	void CS_Activate_2(void);
 
 	/**
-	 * @brief Деактивация CS (PC1 = 1)
+	 * @brief Деактивация CS 
+	 * (PB7 = 1)
+	 * (PC1 = 1)
 	 */
 	void CS_Deactivate_2(void);
 
 	/**
-	 * @brief Активация RS (PC2 = 0)
+	 * @brief Активация RS 
+	 * (PA12 = 0)
+	 * (PC2 = 0)
 	 */
 	void CS_Activate_3(void);
 
 	/**
-	 * @brief Деактивация RS (PC2 = 1)
+	 * @brief Деактивация RS 
+	 * (PA12 = 1)
+	 * (PC2 = 1)
 	 */
 	void CS_Deactivate_3(void);
 

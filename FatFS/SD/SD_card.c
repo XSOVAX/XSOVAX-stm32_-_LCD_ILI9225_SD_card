@@ -44,7 +44,7 @@ uint8_t sd_wait_for_r1(uint32_t timeout_ms) {
 static uint8_t sd_send_command(uint8_t cmd, uint32_t arg, uint8_t crc) {
     SPI_devices[0].deactivate();
     SPI_transfer(SPI1, 0xFF); // Пауза
-    Delay_us(5);
+
     SPI_devices[0].activate();
 
     SPI_transfer(SPI1, 0x40 | cmd);

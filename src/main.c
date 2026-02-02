@@ -1,13 +1,13 @@
 /**
  * @file main.c
- * @brief ÐžÑÐ½Ð¾Ð²Ð½Ð¾Ð¹ Ñ„Ð°Ð¹Ð» Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð° STM32F103 + microSDHC + FatFS
+ * @brief Îñíîâíîé ôàéë ïðîåêòà STM32F103 + microSDHC + FatFS
  * 
- * Ð¤ÑƒÐ½ÐºÑ†Ð¸Ð¸:
- * - Ð˜Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ ÑÐ¸ÑÑ‚ÐµÐ¼Ñ‹ (RCC, UART, SPI)
- * - Ð Ð°Ð±Ð¾Ñ‚Ð° Ñ microSD-ÐºÐ°Ñ€Ñ‚Ð¾Ð¹ Ñ‡ÐµÑ€ÐµÐ· FatFS
- * - Ð—Ð°Ð¿Ð¸ÑÑŒ Ð¸ Ñ‡Ñ‚ÐµÐ½Ð¸Ðµ Ñ„Ð°Ð¹Ð»Ð¾Ð²
- * - Ð¡ÐºÐ°Ð½Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ Ñ„Ð°Ð¹Ð»Ð¾Ð² Ð¿Ð¾ Ñ€Ð°ÑÑˆÐ¸Ñ€ÐµÐ½Ð¸ÑŽ
- * - Ð’Ñ‹Ð²Ð¾Ð´ Ð¸Ð½Ñ„Ð¾Ñ€Ð¼Ð°Ñ†Ð¸Ð¸ Ñ‡ÐµÑ€ÐµÐ· UART
+ * Ôóíêöèè:
+ * - Èíèöèàëèçàöèÿ ñèñòåìû (RCC, UART, SPI)
+ * - Ðàáîòà ñ microSD-êàðòîé ÷åðåç FatFS
+ * - Çàïèñü è ÷òåíèå ôàéëîâ
+ * - Ñêàíèðîâàíèå ôàéëîâ ïî ðàñøèðåíèþ
+ * - Âûâîä èíôîðìàöèè ÷åðåç UART
  */
 
 #include "stm32f1xx.h"
@@ -18,41 +18,45 @@
 #include "file_work.h"
 #include "SD_card.h"
 #include "ILI9225.h"
+#include "EXTI.h"
+#include "menu.h"
 
-#define BUF_READ_PICTURE (15 /* ÑÑ‚Ñ€Ð¾Ñ‡ÐµÐº */ * LCD_HEIGHT * 3 /* Ð±Ð°Ð¹Ñ‚Ð° Ð½Ð° Ñ†Ð²ÐµÑ‚ */)
-static uint8_t picture[BUF_READ_PICTURE];
+
+//#define BUF_READ_PICTURE (15 /* ñòðî÷åê */ * LCD_HEIGHT * 3 /* áàéòà íà öâåò */)
+//static uint8_t picture[BUF_READ_PICTURE];
+
 
 /**
- * @brief Ð˜Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ Ñ‚Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ñ ÑÐ¸ÑÑ‚ÐµÐ¼Ñ‹
+ * @brief Èíèöèàëèçàöèÿ òàêòèðîâàíèÿ ñèñòåìû
  * 
- * ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸:
- * - Ð¢Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ Ð¾Ñ‚ HSE (8 ÐœÐ“Ñ†)
- * - PLL: 8 ÐœÐ“Ñ† * 9 = 72 ÐœÐ“Ñ†
- * - APB1 = 36 ÐœÐ“Ñ† (Ð´Ð»Ñ Ð¿ÐµÑ€Ð¸Ñ„ÐµÑ€Ð¸Ð¸)
- * - APB2 = 72 ÐœÐ“Ñ† (Ð´Ð»Ñ Ð¿ÐµÑ€Ð¸Ñ„ÐµÑ€Ð¸Ð¸)
- * - Flash latency = 2 (Ð´Ð»Ñ 72 ÐœÐ“Ñ†)
+ * Íàñòðîéêè:
+ * - Òàêòèðîâàíèå îò HSE (8 ÌÃö)
+ * - PLL: 8 ÌÃö * 9 = 72 ÌÃö
+ * - APB1 = 36 ÌÃö (äëÿ ïåðèôåðèè)
+ * - APB2 = 72 ÌÃö (äëÿ ïåðèôåðèè)
+ * - Flash latency = 2 (äëÿ 72 ÌÃö)
  */
 static void system_rcc_init(void) {
-    // Ð’ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ HSE
+    // Âêëþ÷àåì HSE
     RCC->CR |= RCC_CR_HSEON;
     while (!(RCC->CR & RCC_CR_HSERDY)) {}
 
-    // ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ° Flash latency (2 WS Ð´Ð»Ñ 72 ÐœÐ“Ñ†)
+    // Íàñòðîéêà Flash latency (2 WS äëÿ 72 ÌÃö)
     FLASH->ACR |= FLASH_ACR_LATENCY_2;
     while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_2) {}
 
-    // ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ° Ð¿Ñ€ÐµÐ´Ð´ÐµÐ»Ð¸Ñ‚ÐµÐ»Ñ APB1 (Ð´ÐµÐ»ÐµÐ½Ð¸Ðµ Ð½Ð° 2 â†’ 36 ÐœÐ“Ñ†)
+    // Íàñòðîéêà ïðåääåëèòåëÿ APB1 (äåëåíèå íà 2 ? 36 ÌÃö)
     RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
 
-    // ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ° PLL: 8 ÐœÐ“Ñ† * 9 = 72 ÐœÐ“Ñ†
+    // Íàñòðîéêà PLL: 8 ÌÃö * 9 = 72 ÌÃö
     RCC->CFGR &= ~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLXTPRE | RCC_CFGR_PLLMULL);
     RCC->CFGR |= RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL9;
 
-    // Ð’ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ PLL
+    // Âêëþ÷àåì PLL
     RCC->CR |= RCC_CR_PLLON;
     while (!(RCC->CR & RCC_CR_PLLRDY)) {}
 
-    // ÐŸÐµÑ€ÐµÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ÑÑ Ð½Ð° PLL
+    // Ïåðåêëþ÷àåìñÿ íà PLL
     RCC->CFGR &= ~RCC_CFGR_SW;
     RCC->CFGR |= RCC_CFGR_SW_PLL;
     while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {}
@@ -60,27 +64,40 @@ static void system_rcc_init(void) {
 
 
 /**
- * @brief ÐžÑÐ½Ð¾Ð²Ð½Ð°Ñ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ñ Ð¿Ñ€Ð¾Ð³Ñ€Ð°Ð¼Ð¼Ñ‹
+ * @brief Îñíîâíàÿ ôóíêöèÿ ïðîãðàììû
  */
 int main(void) {
+    RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+    GPIOC->CRH |= GPIO_CRH_MODE13 | GPIO_CRH_CNF13_0;
+    for (volatile int i = 0; i < 5; i++){
+        GPIOC->BSRR |= GPIO_BSRR_BS13; 
+        for (volatile int i = 0; i < 50000; i++);
+        GPIOC->BSRR |= GPIO_BSRR_BR13; 
+        for (volatile int i = 0; i < 50000; i++);
+    }
+
+
     system_rcc_init();
-
-    // Ð˜Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·ÑƒÑ€ÐµÐ¼ USART1 Ð´Ð»Ñ Ð»Ð¾Ð³Ð¾Ð²
+    // Èíèöèàëèçóðåì USART1 äëÿ ëîãîâ
     uart_init();
-    uart_puts("ÐŸÑ€Ð¾ÐµÐºÑ‚ Ð¸Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð¸Ñ€Ð¾Ð²Ð°Ð½!\r\n");
-    Delay_ms(500);
-    uart_puts("ÐŸÑ€Ð¾Ð¶Ð´Ð°Ð»Ð¸ 500 Ð¼ÑÐµÐº!\r\n");
-    Delay_us(500);
-    uart_puts("ÐŸÑ€Ð¾Ð¶Ð´Ð°Ð»Ð¸ 500 Ð½ÑÐµÐº!\r\n");
+    uart_puts("Project init!\r\n");
+    TIM3_init();
+    SysTick_init();
     spi_init();
-    uart_puts("Ð¢ÐµÐ¿ÐµÑ€ÑŒ ÐµÑÑ‚ÑŒ SPI1!\r\n");
-    uart_puts("ÐžÐ½ Ð½ÑƒÐ¶ÐµÐ½ Ð´Ð»Ñ Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ Ñ SD ÐºÐ°Ñ€Ñ‚Ð¾Ð¹ Ð¸ LCD Ð´Ð¸ÑÐ¿Ð»ÐµÐµÐ¼\r\n");
-    uart_puts("ÐŸÐ¾ÐºÐ° Ñƒ Ð½Ð°Ñ Ð¼ÑƒÐ»ÑŒÑ‚Ð¸ ÑÐ»ÐµÐ¹Ð² Ñ€ÐµÐ¶Ð¸Ð¼ Ð¿Ð¾Ñ‚Ð¾Ð¼ Ñ€Ð°Ð·Ð½ÐµÑÐµÐ¼ Ð´Ð»Ñ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð¸Ñ DMA \r\n");
+ 
+    // Èíèöèàëèçàöèÿ äèñïëåÿ
+    ILI9225_init();
+    Delay_ms(100);
 
+
+    menu_redraw_full();
+    EXTI_init();
+    
+    
+    /*
     sd_init();
-
     uart_puts("\r\n=== FatFS Test ===\r\n");
-    // Ð˜Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ Ñ„Ð°Ð¹Ð»Ð¾Ð²Ð¾Ð¹ ÑÐ¸ÑÑ‚ÐµÐ¼Ñ‹
+    // Èíèöèàëèçàöèÿ ôàéëîâîé ñèñòåìû
     FRESULT res = filesystem_init();
     while (res != FR_OK) {
         uart_puts("Filesystem init failed: ");
@@ -94,14 +111,16 @@ int main(void) {
 
     uart_puts("Filesystem mounted!\r\n");
 
-    // Ð’Ñ‹Ð²Ð¾Ð´ Ð²ÑÐµÑ… Ñ„Ð°Ð¹Ð»Ð¾Ð² 
+    // Âûâîä âñåõ ôàéëîâ 
     list_files(".*");
 
-    // Ð˜Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ Ð´Ð¸ÑÐ¿Ð»ÐµÑ
-    ILI9225_init();
-	// ÐžÑ‡Ð¸ÑÑ‚ÐºÐ° Ð´Ð¸ÑÐ¿Ð»ÐµÑ (Ð·Ð°Ð»Ð¸Ð²ÐºÐ° Ñ‡ÐµÑ€Ð½Ñ‹Ð¼ Ñ†Ð²ÐµÑ‚Ð¾Ð¼)
-    ILI9225_clear();
-    // Ð£ÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ° Ð¾Ñ€Ð¸ÐµÐ½Ñ‚Ð°Ñ†Ð¸Ð¸ (011)
+    */
+    
+    
+    //ILI9225_write(ENTRY_MODE, (0x1000) | (0b011 << 3));
+    
+    /*
+    // Óñòàíîâêà îðèåíòàöèè (011)
     ILI9225_write(ENTRY_MODE, (0x1000) | (0b011 << 3));
 
     file_read("xp_.bmp", picture, BUF_READ_PICTURE);
@@ -116,5 +135,11 @@ int main(void) {
     drawString8x8(10, 150 + 9, "HELLO WORLD", COLOR_TOMATO, 0);
     drawString8x8(10, 150 + 9 * 2, "HELLO WORLD", COLOR_TOMATO, 1);
     drawString8x8(10, 150 + 9 * 3, "HELLO WORLD", COLOR_TOMATO, 0);
-    while(1){}
+    */
+
+    //char buf[50];
+    while(1){
+
+    }
 }
+
